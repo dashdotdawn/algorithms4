@@ -5,15 +5,17 @@ import edu.princeton.cs.algs4.StdOut;
 public class Percolation {
     private final int size;
     private final WeightedQuickUnionUF uf;
+    private final WeightedQuickUnionUF isFullUF;
     private final int virtualTop;
     private final int virtualBottom;
     private boolean[][] grid;
     private int openSitesCount;
 
     public Percolation(int n) {
-        if (n <= 0 ) throw new IllegalArgumentException("n should be greater than zero.");
+        if (n <= 0) throw new IllegalArgumentException("n should be greater than zero.");
         size = n;
         uf = new WeightedQuickUnionUF(n * n + 2);
+        isFullUF = new WeightedQuickUnionUF(n * n + 2);
         virtualTop = 0;
         virtualBottom = n * n + 1;
         grid = new boolean[n][n]; // default value false
@@ -24,9 +26,15 @@ public class Percolation {
         return (row - 1) * size + col;
     }    
     private void connectSites(int centerIndex, int row, int col) {
-        if (row == 0) uf.union(centerIndex, virtualTop);
-        else if (row == size + 1) uf.union(centerIndex, virtualBottom);
-        else if (isOpen(row, col)) uf.union(centerIndex, getIndex(row, col));
+        if (row == 0) {
+            uf.union(centerIndex, virtualTop);
+            isFullUF.union(centerIndex, virtualTop);
+        } else if (row == size + 1) {
+            uf.union(centerIndex, virtualBottom);
+        } else if (isOpen(row, col)) {
+            uf.union(centerIndex, getIndex(row, col));
+            isFullUF.union(centerIndex, getIndex(row, col));
+        }
     }
 
     public void open(int row, int col) {
@@ -54,7 +62,7 @@ public class Percolation {
         if (row <= 0 || row > size || col <= 0 || col > size) {
             throw new IllegalArgumentException("the row and column indices are integers between 1 and n");
         }
-        return isOpen(row, col) && uf.connected(virtualTop, getIndex(row, col));
+        return isOpen(row, col) && isFullUF.connected(virtualTop, getIndex(row, col));
     }
     public int numberOfOpenSites() {
         return openSitesCount;
@@ -70,7 +78,7 @@ public class Percolation {
             int p = StdIn.readInt();
             int q = StdIn.readInt();
             percolation.open(p, q);
-            if (percolation.numberOfOpenSites() == 231) StdOut.println(percolation.isFull(18, 1));
+            if (percolation.numberOfOpenSites() == 6) StdOut.println(percolation.isFull(3, 1));
         }
         StdOut.println(percolation.numberOfOpenSites() + " open sites");
         StdOut.println(percolation.percolates());
